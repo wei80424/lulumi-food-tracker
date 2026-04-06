@@ -1,0 +1,11 @@
+[theme]
+# 強制使用淺色模式
+base="light"
+# 自訂主色調 (這裡幫你配了溫暖的橘黃色)
+primaryColor="#FFB347"
+# 自訂背景顏色 (溫暖的米白色)
+backgroundColor="#FFFDF9"
+# 自訂次要背景色 (卡片、選單的底色)
+secondaryBackgroundColor="#FFF2E5"
+# 自訂文字顏色 (深灰，閱讀起來不刺眼)
+textColor="#4A4A4A"
