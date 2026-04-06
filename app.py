@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+# 🌟 修改 1：多匯入 timedelta 和 timezone 來處理時差
+from datetime import datetime, timedelta, timezone
 import gspread
 import traceback
 
@@ -35,7 +36,6 @@ def init_connection():
     try:
         credentials = dict(st.secrets["gcp_service_account"])
         gc = gspread.service_account_from_dict(credentials)
-        # 指定試算表名稱：嚕嚕米副食品日記
         return gc.open("嚕嚕米副食品日記").sheet1
     except Exception as e:
         st.error("連線失敗！請確認試算表名稱與權限。")
@@ -56,27 +56,28 @@ tab1, tab2 = st.tabs(["📝 新增紀錄", "📊 成就看板"])
 with tab1:
     st.subheader("今日餵食狀況")
     
-    # 日期選擇
-    date_val = st.date_input("🗓️ 餵食日期", datetime.now().date())
+    # 🌟 修改 2：建立台灣專屬時區 (UTC+8)
+    tz_tw = timezone(timedelta(hours=8))
+    # 🌟 修改 3：強制抓取台灣時間
+    now = datetime.now(tz_tw)
     
-    # 🌟 修改：4位數時間選擇 (HHMM)
+    # 日期選擇 (使用校正後的 now)
+    date_val = st.date_input("🗓️ 餵食日期", now.date())
+    
     st.write("⏰ 餵食時間")
-    # 生成 0000, 0005, ... 2355 的清單
     time_options = []
     for h in range(24):
         for m in range(0, 60, 5):
             time_options.append(f"{h:02d}{m:02d}")
     
-    # 計算當前對齊時間
-    now = datetime.now()
+    # 計算當前對齊時間 (使用校正後的 now)
     rounded_min = (now.minute // 5) * 5
     current_hhmm = f"{now.hour:02d}{rounded_min:02d}"
     
-    # 預設選在最接近的時間
     default_idx = time_options.index(current_hhmm) if current_hhmm in time_options else 0
     final_time_str = st.selectbox("請選擇 4 位數時間 (HHMM)", time_options, index=default_idx, label_visibility="collapsed")
 
-    # 🌟 修改：食材分類 (參考 100 種食物挑戰)
+    # 食材分類
     food_categories = {
         "🌾 全穀雜糧類": ["十倍粥", "七倍粥", "五倍粥", "地瓜", "南瓜", "馬鈴薯", "山藥", "燕麥", "玉米"],
         "🥬 蔬菜類": ["高麗菜", "紅蘿蔔", "青花菜", "菠菜", "洋蔥", "冬瓜", "番茄", "絲瓜", "甜椒"],
@@ -91,7 +92,7 @@ with tab1:
     with col_food:
         food_val = st.selectbox("🥗 具體食材", food_categories[selected_cat])
 
-    amount_val = st.selectbox(" Spoon 份量", ["試味道 (1-2口)", "5 ml", "10 ml", "15 ml", "30 ml", "50 ml", "半碗", "一碗"])
+    amount_val = st.selectbox("🥄 份量", ["試味道 (1-2口)", "5 ml", "10 ml", "15 ml", "30 ml", "50 ml", "半碗", "一碗"])
     reaction_val = st.radio("🩺 身體反應", ["✅ 正常", "⚠️ 紅疹", "💩 腹瀉/便秘", "🤮 嘔吐"], horizontal=True)
     note_val = st.text_input("📝 觀察備註", placeholder="紀錄喜好或狀況...")
 
